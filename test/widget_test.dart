@@ -4,6 +4,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/menu.dart';
 
+const namaTombol = [
+  'Lihat Proyek',
+  'Tambah Proyek',
+  'Lihat Skills',
+  'Lihat Pengalaman',
+  'Tambah Pengalaman',
+  'Logout',
+];
+
+Color? warnaKartu(WidgetTester tester, String nama) {
+  final kartu = find.widgetWithText(ItemCard, nama);
+  final material = find.descendant(of: kartu, matching: find.byType(Material));
+  return tester.widget<Material>(material.first).color;
+}
+
 void main() {
   testWidgets('halaman utama menampilkan identitas pemilik', (tester) async {
     await tester.pumpWidget(const MyApp());
@@ -23,23 +38,18 @@ void main() {
     expect(find.text('2406000001'), findsNothing);
   });
 
-  testWidgets('tiap tombol menu punya warna latar yang berbeda', (
+  testWidgets('semua tombol menu tampil dan warna latarnya berbeda', (
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
 
     final warna = <Color?>[];
-    for (final nama in ['Lihat Proyek', 'Tambah Proyek', 'Logout']) {
-      final kartu = find.widgetWithText(ItemCard, nama);
-      expect(kartu, findsOneWidget);
-      final material = find.descendant(
-        of: kartu,
-        matching: find.byType(Material),
-      );
-      warna.add(tester.widget<Material>(material.first).color);
+    for (final nama in namaTombol) {
+      expect(find.widgetWithText(ItemCard, nama), findsOneWidget);
+      warna.add(warnaKartu(tester, nama));
     }
 
-    expect(warna.toSet().length, warna.length);
+    expect(warna.toSet().length, namaTombol.length);
   });
 
   testWidgets('menekan kartu menu memunculkan SnackBar', (tester) async {
@@ -62,4 +72,40 @@ void main() {
     expect(find.text('Kamu telah menekan tombol Logout!'), findsOneWidget);
     expect(find.text('Kamu telah menekan tombol Lihat Proyek!'), findsNothing);
   });
+
+  testWidgets('SnackBar memakai warna kartu yang ditekan', (tester) async {
+    // layar tinggi supaya SnackBar tidak menutupi kartu di baris bawah
+    tester.view.physicalSize = const Size(400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const MyApp());
+
+    for (final nama in ['Tambah Proyek', 'Lihat Pengalaman']) {
+      await tester.tap(find.text(nama));
+      await tester.pumpAndSettle();
+
+      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(snackBar.backgroundColor, warnaKartu(tester, nama));
+    }
+  });
+
+  for (final ukuran in const [Size(320, 640), Size(360, 740), Size(412, 915)]) {
+    testWidgets('tata letak muat di layar ${ukuran.width.toInt()} px', (
+      tester,
+    ) async {
+      tester.view.physicalSize = ukuran;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(const MyApp());
+
+      expect(tester.takeException(), isNull);
+
+      // tombol paling bawah tetap bisa dijangkau lewat gulir
+      await tester.ensureVisible(find.text('Logout'));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
