@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myportofolio_mobile/main.dart';
-import 'package:myportofolio_mobile/menu.dart';
+import 'package:myportofolio_mobile/widgets/project_card.dart';
 
 const namaTombol = [
   'Lihat Proyek',
@@ -81,7 +81,7 @@ void main() {
 
     await tester.pumpWidget(const MyApp());
 
-    for (final nama in ['Tambah Proyek', 'Lihat Pengalaman']) {
+    for (final nama in ['Lihat Skills', 'Lihat Pengalaman']) {
       await tester.tap(find.text(nama));
       await tester.pumpAndSettle();
 

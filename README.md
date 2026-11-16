@@ -10,6 +10,7 @@ Dibuat untuk mata kuliah **Pemrograman Berbasis Platform (PBP)**, Fakultas Ilmu 
 |---|---|
 | Tutorial 08 | Proyek Flutter dibuat, halaman utama dipisah ke `lib/menu.dart`, `MyHomePage` menjadi `StatelessWidget`, `InfoCard` dan `ItemCard` dengan data contoh Burhan. |
 | Tugas 7 | Identitas diganti dengan data sendiri, setiap tombol menu punya warna sendiri lewat model `ItemHomepage`, ditambah tiga tombol baru dan tata letak yang tetap rapi di layar sempit. |
+| Tutorial 09 | Navigasi dengan `Navigator`, drawer (`LeftDrawer`), halaman formulir Tambah Proyek dengan validasi dan dialog ringkasan, serta refactor ke `lib/screens/` dan `lib/widgets/`. |
 
 ## Fitur saat ini
 
@@ -17,10 +18,13 @@ Dibuat untuk mata kuliah **Pemrograman Berbasis Platform (PBP)**, Fakultas Ilmu 
 - Enam `ItemCard` berbentuk kisi: Lihat Proyek, Tambah Proyek, Lihat Skills, Lihat Pengalaman, Tambah Pengalaman, dan Logout. Warna latar tiap kartu berbeda dan diambil dari atribut `color` pada `ItemHomepage`, sehingga tidak ada percabangan if-else untuk warna.
 - Menekan kartu menampilkan `SnackBar` bertuliskan "Kamu telah menekan tombol [Nama Tombol]!". SnackBar memakai warna dan ikon kartu yang ditekan, dan pesan lama diganti, bukan menumpuk.
 - Tata letak responsif: kartu identitas memakai `Expanded` sehingga lebarnya mengikuti layar, halaman bisa digulir, dan lebar isi dibatasi 600 px agar tetap enak dilihat di Chrome.
+- Drawer di sisi kiri (header, **Home**, dan **Add Project**). Drawer yang sama dipasang di halaman utama dan halaman formulir. Opsi di drawer memakai `Navigator.pushReplacement()` supaya halaman tidak menumpuk.
+- Kartu **Tambah Proyek** membuka `ProjectFormPage` dengan `Navigator.push()`, jadi tombol Back perangkat atau browser kembali ke menu.
+- `ProjectFormPage` (`StatefulWidget` dengan `Form` dan `GlobalKey<FormState>`) berisi nama proyek dan deskripsi (wajib, isian kosong atau hanya spasi ditolak), kategori (dropdown), teknologi, dan tautan opsional. Tombol Save memanggil `validate()` dan, kalau lolos, menampilkan `AlertDialog` berisi semua isian. Data belum disimpan ke database. Setelah OK, form dan variabelnya dikosongkan.
 
 ## Menjalankan
 
-Versi yang dipakai: Flutter 3.47.9 dan Dart 3.13.7.
+Versi yang dipakai: Flutter 3.47.9 dan Dart 3.13.7. Mulai Tutorial 09, impor Material memakai paket `material_ui` (`import 'package:material_ui/material_ui.dart';`), sesuai catatan perubahan Flutter 3.50 di tutorial. Paketnya sudah ada di `pubspec.yaml`, jadi `flutter pub get` sudah cukup.
 
 ```sh
 flutter pub get
@@ -38,10 +42,19 @@ flutter test
 
 ```
 lib/
-  main.dart   titik masuk aplikasi dan tema
-  menu.dart   halaman utama, InfoCard, ItemHomepage, dan ItemCard
+  main.dart                titik masuk aplikasi dan tema
+  screens/
+    menu.dart              halaman utama (MyHomePage)
+    project_form.dart      formulir Tambah Proyek (ProjectFormPage)
+  widgets/
+    left_drawer.dart       drawer navigasi
+    info_card.dart         kartu identitas (InfoCard)
+    project_card.dart      model ItemHomepage dan kartu menu (ItemCard)
 test/
-  widget_test.dart
+  widget_test.dart         halaman utama dan SnackBar
+  drawer_test.dart         drawer dan navigasi Home / Add Project
+  project_form_test.dart   validasi dan dialog formulir
+  navigation_test.dart     navigasi dari kartu dan reset form
 ```
 
 ## Pertanyaan Reflektif

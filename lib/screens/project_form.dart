@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 
 class ProjectFormPage extends StatefulWidget {
   const ProjectFormPage({super.key});
@@ -32,6 +33,7 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
+      drawer: const LeftDrawer(),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -99,7 +101,8 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                   ),
-                  initialValue: _category,
+                  // nilai awal tetap supaya reset() kembali ke kategori pertama
+                  initialValue: _categories.first,
                   items: _categories
                       .map(
                         (category) => DropdownMenuItem(
@@ -188,6 +191,14 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
                                   onPressed: () {
                                     Navigator.pop(context);
                                     _formKey.currentState!.reset();
+                                    // reset() hanya mengosongkan kolom, jadi variabelnya dikosongkan juga
+                                    setState(() {
+                                      _projectName = "";
+                                      _description = "";
+                                      _category = _categories.first;
+                                      _technologies = "";
+                                      _projectLink = "";
+                                    });
                                   },
                                 ),
                               ],
