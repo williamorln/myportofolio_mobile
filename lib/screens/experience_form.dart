@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/models/experience.dart';
 import 'package:myportofolio_mobile/utils/validators.dart';
@@ -19,9 +20,18 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   final _deskripsiController = TextEditingController();
   final _thumbnailController = TextEditingController();
 
-  // kunci kolom tanggal, dipakai membaca nilainya dan mengosongkannya
+  // kunci kolom, dipakai membaca nilai tanggal, mengosongkannya, dan mencari
+  // kolom yang error untuk digulirkan ke layar
+  final _judulKey = GlobalKey<FormFieldState<String>>();
+  final _deskripsiKey = GlobalKey<FormFieldState<String>>();
+  final _thumbnailKey = GlobalKey<FormFieldState<String>>();
   final _mulaiKey = GlobalKey<FormFieldState<DateTime>>();
   final _selesaiKey = GlobalKey<FormFieldState<DateTime>>();
+
+  // batas panjang disamakan dengan model Django (deskripsi dibatasi 1000 di sini)
+  static const _maxJudul = 255;
+  static const _maxDeskripsi = 1000;
+  static const _maxThumbnail = 500;
 
   // sama dengan default 'full-time' di model Django
   static const _kategoriAwal = ExperienceCategory.fullTime;
@@ -44,8 +54,34 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     );
   }
 
+  /// Menggulir layar ke kolom pertama yang masih error. Tanpa ini, di layar
+  /// sempit pesan error bisa tersembunyi di atas saat Simpan ditekan.
+  void _gulirKeKolomError() {
+    final urutan = <GlobalKey<FormFieldState<dynamic>>>[
+      _judulKey,
+      _deskripsiKey,
+      _thumbnailKey,
+      _mulaiKey,
+      _selesaiKey,
+    ];
+    for (final kunci in urutan) {
+      final konteks = kunci.currentContext;
+      if (kunci.currentState?.hasError == true && konteks != null) {
+        Scrollable.ensureVisible(
+          konteks,
+          alignment: 0.1,
+          duration: const Duration(milliseconds: 300),
+        );
+        return;
+      }
+    }
+  }
+
   void _simpan() {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      _gulirKeKolomError();
+      return;
+    }
 
     final entry = ExperienceEntry(
       title: _judulController.text.trim(),
@@ -68,7 +104,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final baris in entry.summary)
+                for (final baris in entry.summary())
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: Column(
@@ -131,6 +167,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
           constraints: const BoxConstraints(maxWidth: 600),
           child: Form(
             key: _formKey,
+            // setelah kolom disentuh, error ikut berubah saat pengguna mengetik
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -139,13 +177,20 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                 children: [
                   // === Judul ===
                   TextFormField(
+                    key: _judulKey,
                     controller: _judulController,
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
+                    // enforcement none: teks boleh melebihi batas supaya
+                    // validator yang menolak dan menjelaskannya
+                    maxLength: _maxJudul,
+                    maxLengthEnforcement: MaxLengthEnforcement.none,
                     decoration: _dekorasi(
                       'Judul Pengalaman',
                       hint: 'Contoh: Magang Backend Developer',
                     ),
                     validator: (value) =>
-                        validateRequired(value, 'Judul', maxLength: 255),
+                        validateRequired(value, 'Judul', maxLength: _maxJudul),
                   ),
                   const SizedBox(height: 16),
 
@@ -166,27 +211,39 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
 
                   // === Deskripsi ===
                   TextFormField(
+                    key: _deskripsiKey,
                     controller: _deskripsiController,
                     minLines: 3,
                     maxLines: 5,
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLength: _maxDeskripsi,
+                    maxLengthEnforcement: MaxLengthEnforcement.none,
                     decoration: _dekorasi(
                       'Deskripsi',
                       hint: 'Apa yang kamu kerjakan?',
                     ),
-                    validator: (value) =>
-                        validateRequired(value, 'Deskripsi', maxLength: 1000),
+                    validator: (value) => validateRequired(
+                      value,
+                      'Deskripsi',
+                      maxLength: _maxDeskripsi,
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   // === Thumbnail (opsional) ===
                   TextFormField(
+                    key: _thumbnailKey,
                     controller: _thumbnailController,
                     keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.done,
+                    maxLength: _maxThumbnail,
+                    maxLengthEnforcement: MaxLengthEnforcement.none,
                     decoration: _dekorasi(
                       'URL Thumbnail (opsional)',
                       hint: 'https://contoh.com/gambar.png',
                     ),
-                    validator: validateOptionalUrl,
+                    validator: (value) =>
+                        validateOptionalUrl(value, maxLength: _maxThumbnail),
                   ),
                   const SizedBox(height: 16),
 
@@ -195,6 +252,12 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     key: _mulaiKey,
                     label: 'Tanggal Mulai',
                     validator: (tanggal) => validateStartDate(tanggal),
+                    // kalau tanggal selesai sudah terisi, urutannya dicek ulang
+                    onChanged: (_) {
+                      if (_selesaiKey.currentState?.value != null) {
+                        _selesaiKey.currentState!.validate();
+                      }
+                    },
                   ),
                   const SizedBox(height: 8),
 

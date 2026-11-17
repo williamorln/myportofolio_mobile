@@ -216,4 +216,113 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('mengubah tanggal mulai mengecek ulang tanggal selesai', (
+    tester,
+  ) async {
+    await bukaForm(tester);
+    isiTanggal(tester, 1, DateTime(2020, 1, 1));
+    await tester.pump();
+    expect(
+      find.text('Tanggal selesai tidak boleh sebelum tanggal mulai!'),
+      findsNothing,
+    );
+
+    // tanggal mulai dipilih lewat date picker (tanggal 1 bulan ini)
+    await tester.tap(find.byType(DateFormField).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1'));
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Tanggal selesai tidak boleh sebelum tanggal mulai!'),
+      findsOneWidget,
+    );
+  });
+
+  group('kemudahan pengisian', () {
+    testWidgets('penghitung karakter tampil di kolom teks', (tester) async {
+      await bukaForm(tester);
+
+      expect(find.text('0/255'), findsOneWidget);
+      expect(find.text('0/1000'), findsOneWidget);
+      expect(find.text('0/500'), findsOneWidget);
+
+      await isiTeks(tester, 'Judul Pengalaman', 'Magang');
+      await tester.pump();
+      expect(find.text('6/255'), findsOneWidget);
+    });
+
+    testWidgets('error langsung berubah saat mengetik, tanpa menekan Simpan', (
+      tester,
+    ) async {
+      await bukaForm(tester);
+
+      await isiTeks(tester, 'Judul Pengalaman', '   ');
+      await tester.pump();
+      expect(find.text('Judul tidak boleh kosong!'), findsOneWidget);
+
+      await isiTeks(tester, 'Judul Pengalaman', 'Magang');
+      await tester.pump();
+      expect(find.text('Judul tidak boleh kosong!'), findsNothing);
+    });
+
+    testWidgets('dialog menampilkan durasi pengalaman', (tester) async {
+      await bukaForm(tester);
+      await isiDasar(tester);
+      isiTanggal(tester, 0, DateTime(2025, 6, 1));
+      isiTanggal(tester, 1, DateTime(2025, 8, 30));
+      await tekanSimpan(tester);
+
+      expect(diDialog('Durasi'), findsOneWidget);
+      expect(diDialog('2 bulan'), findsOneWidget);
+    });
+  });
+
+  group('layar sempit dengan papan ketik', () {
+    // ponsel kecil (320 x 640) dengan papan ketik setinggi 300 px
+    Future<void> bukaDiPonsel(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(const MaterialApp(home: ExperienceFormPage()));
+    }
+
+    testWidgets('tombol Simpan tetap bisa dijangkau dengan menggulir', (
+      tester,
+    ) async {
+      await bukaDiPonsel(tester);
+      expect(tester.takeException(), isNull);
+
+      await tester.ensureVisible(find.text('Simpan'));
+      await tester.pumpAndSettle();
+
+      // tombol berada di area yang tidak tertutup papan ketik
+      final kotak = tester.getRect(find.text('Simpan'));
+      expect(kotak.bottom, lessThanOrEqualTo(640 - 300));
+
+      await tester.tap(find.text('Simpan'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
+    testWidgets('Simpan menggulir layar ke kolom pertama yang error', (
+      tester,
+    ) async {
+      await bukaDiPonsel(tester);
+      await tester.ensureVisible(find.text('Simpan'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Simpan'));
+      await tester.pumpAndSettle();
+
+      // judul adalah kolom pertama yang error, jadi harus kembali terlihat
+      final kotak = tester.getRect(find.text('Judul tidak boleh kosong!'));
+      expect(kotak.top, greaterThanOrEqualTo(56)); // di bawah AppBar
+      expect(kotak.bottom, lessThanOrEqualTo(640 - 300));
+    });
+  });
 }

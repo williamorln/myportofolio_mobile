@@ -36,7 +36,9 @@ class DateFormField extends FormField<DateTime> {
              borderRadius: BorderRadius.circular(5.0),
              onTap: enabled ? pilihTanggal : null,
              child: InputDecorator(
-               isEmpty: tanggal == null && enabled,
+               // isi selalu ada ("Pilih tanggal" atau tanggalnya), jadi label
+               // dibiarkan melayang dan tidak menumpuk dengan isinya
+               isEmpty: false,
                decoration: InputDecoration(
                  labelText: label,
                  errorText: state.errorText,

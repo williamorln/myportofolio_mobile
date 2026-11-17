@@ -36,13 +36,23 @@ class ExperienceEntry {
 
   bool get isOngoing => endedAt == null;
 
+  /// Lama pengalaman. Kalau masih berjalan, dihitung sampai [now] (default hari ini).
+  String duration({DateTime? now}) =>
+      formatDurasi(startedAt, endedAt ?? now ?? DateTime.now());
+
   /// Pasangan label dan nilai untuk dialog ringkasan, urutannya sama dengan formulir.
-  List<MapEntry<String, String>> get summary => [
+  List<MapEntry<String, String>> summary({DateTime? now}) => [
     MapEntry('Judul', title),
     MapEntry('Kategori', category.label),
     MapEntry('Deskripsi', description),
     MapEntry('Thumbnail', thumbnail.isEmpty ? '-' : thumbnail),
     MapEntry('Mulai', formatTanggal(startedAt)),
     MapEntry('Selesai', isOngoing ? 'Masih berjalan' : formatTanggal(endedAt!)),
+    MapEntry(
+      'Durasi',
+      isOngoing
+          ? '${duration(now: now)} (sampai sekarang)'
+          : duration(now: now),
+    ),
   ];
 }

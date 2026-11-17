@@ -148,6 +148,52 @@ void main() {
     });
   });
 
+  group('formatDurasi', () {
+    test('kurang dari sebulan dihitung dalam hari, kedua ujung ikut', () {
+      expect(
+        formatDurasi(DateTime(2025, 6, 1), DateTime(2025, 6, 1)),
+        '1 hari',
+      );
+      expect(
+        formatDurasi(DateTime(2025, 6, 1), DateTime(2025, 6, 20)),
+        '20 hari',
+      );
+    });
+
+    test('bulan penuh, dan sisa hari tidak membulatkan ke atas', () {
+      expect(
+        formatDurasi(DateTime(2025, 6, 1), DateTime(2025, 8, 30)),
+        '2 bulan',
+      );
+      expect(
+        formatDurasi(DateTime(2025, 6, 15), DateTime(2025, 8, 14)),
+        '1 bulan',
+      );
+      expect(
+        formatDurasi(DateTime(2025, 6, 15), DateTime(2025, 8, 15)),
+        '2 bulan',
+      );
+    });
+
+    test('lebih dari setahun memakai tahun dan bulan', () {
+      expect(
+        formatDurasi(DateTime(2024, 1, 10), DateTime(2025, 1, 10)),
+        '1 tahun',
+      );
+      expect(
+        formatDurasi(DateTime(2024, 1, 10), DateTime(2026, 4, 12)),
+        '2 tahun 3 bulan',
+      );
+    });
+
+    test('jam di dalam tanggal tidak mempengaruhi hasil', () {
+      expect(
+        formatDurasi(DateTime(2025, 6, 1, 23, 59), DateTime(2025, 6, 1, 0, 0)),
+        '1 hari',
+      );
+    });
+  });
+
   group('ExperienceEntry', () {
     test('summary berisi semua isian berurutan', () {
       final entry = ExperienceEntry(
@@ -159,18 +205,21 @@ void main() {
       );
 
       expect(entry.isOngoing, isFalse);
-      expect(entry.summary.map((e) => e.key), [
+      final ringkasan = entry.summary();
+      expect(ringkasan.map((e) => e.key), [
         'Judul',
         'Kategori',
         'Deskripsi',
         'Thumbnail',
         'Mulai',
         'Selesai',
+        'Durasi',
       ]);
-      expect(entry.summary[1].value, 'Internship');
-      expect(entry.summary[3].value, '-');
-      expect(entry.summary[4].value, '1 Juni 2025');
-      expect(entry.summary[5].value, '30 Agustus 2025');
+      expect(ringkasan[1].value, 'Internship');
+      expect(ringkasan[3].value, '-');
+      expect(ringkasan[4].value, '1 Juni 2025');
+      expect(ringkasan[5].value, '30 Agustus 2025');
+      expect(ringkasan[6].value, '2 bulan');
     });
 
     test('tanpa tanggal selesai dianggap masih berjalan', () {
@@ -181,8 +230,10 @@ void main() {
         startedAt: DateTime(2026, 1, 10),
       );
 
+      final ringkasan = entry.summary(now: DateTime(2026, 11, 17));
       expect(entry.isOngoing, isTrue);
-      expect(entry.summary.last.value, 'Masih berjalan');
+      expect(ringkasan[5].value, 'Masih berjalan');
+      expect(ringkasan[6].value, '10 bulan (sampai sekarang)');
     });
 
     test('kategori sama dengan pilihan di model Django', () {
