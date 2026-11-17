@@ -1,12 +1,15 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:myportofolio_mobile/screens/project_form.dart';
 
 class ItemHomepage {
   final String name;
   final IconData icon;
   final Color color;
 
-  ItemHomepage(this.name, this.icon, this.color);
+  /// Halaman tujuan kalau kartu ditekan. null berarti kartu hanya menampilkan
+  /// SnackBar tanpa berpindah halaman.
+  final WidgetBuilder? page;
+
+  ItemHomepage(this.name, this.icon, this.color, {this.page});
 }
 
 class ItemCard extends StatelessWidget {
@@ -42,11 +45,9 @@ class ItemCard extends StatelessWidget {
             );
 
           // push (bukan pushReplacement) supaya tombol Back kembali ke menu
-          if (item.name == "Tambah Proyek") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ProjectFormPage()),
-            );
+          final tujuan = item.page;
+          if (tujuan != null) {
+            Navigator.push(context, MaterialPageRoute(builder: tujuan));
           }
         },
         child: Padding(
