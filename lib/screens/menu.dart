@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/project_list_screen.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/info_card.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 import 'package:myportofolio_mobile/widgets/project_card.dart';
@@ -27,6 +28,7 @@ class MyHomePage extends StatelessWidget {
       Icons.add_circle,
       Colors.green.shade700,
       page: (context) => const ProjectFormPage(),
+      requiresLogin: true,
     ),
     ItemHomepage("Lihat Skills", Icons.bolt, Colors.purple.shade700),
     ItemHomepage("Lihat Pengalaman", Icons.work, Colors.orange.shade900),
@@ -36,7 +38,12 @@ class MyHomePage extends StatelessWidget {
       Colors.teal.shade700,
       page: (context) => const ExperienceFormPage(),
     ),
-    ItemHomepage("Logout", Icons.logout, Colors.red.shade700),
+    ItemHomepage(
+      "Logout",
+      Icons.logout,
+      Colors.red.shade700,
+      action: logoutWithMessage,
+    ),
   ];
 
   @override

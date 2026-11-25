@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 
 class ItemHomepage {
   final String name;
@@ -9,7 +10,21 @@ class ItemHomepage {
   /// SnackBar tanpa berpindah halaman.
   final WidgetBuilder? page;
 
-  ItemHomepage(this.name, this.icon, this.color, {this.page});
+  /// Kalau true, pengguna harus login dulu sebelum halaman tujuan dibuka.
+  final bool requiresLogin;
+
+  /// Aksi khusus yang dijalankan saat kartu ditekan, menggantikan perpindahan
+  /// halaman (misalnya Logout).
+  final Future<void> Function(BuildContext context)? action;
+
+  ItemHomepage(
+    this.name,
+    this.icon,
+    this.color, {
+    this.page,
+    this.requiresLogin = false,
+    this.action,
+  });
 }
 
 class ItemCard extends StatelessWidget {
@@ -24,7 +39,7 @@ class ItemCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
+        onTap: () async {
           // sembunyikan SnackBar lama dulu supaya pesan tidak menumpuk
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -44,11 +59,21 @@ class ItemCard extends StatelessWidget {
               ),
             );
 
-          // push (bukan pushReplacement) supaya tombol Back kembali ke menu
-          final tujuan = item.page;
-          if (tujuan != null) {
-            Navigator.push(context, MaterialPageRoute(builder: tujuan));
+          final aksi = item.action;
+          if (aksi != null) {
+            await aksi(context);
+            return;
           }
+
+          final tujuan = item.page;
+          if (tujuan == null) return;
+
+          if (item.requiresLogin) {
+            final loggedIn = await ensureLoggedIn(context);
+            if (!loggedIn || !context.mounted) return;
+          }
+          // push (bukan pushReplacement) supaya tombol Back kembali ke menu
+          Navigator.push(context, MaterialPageRoute(builder: tujuan));
         },
         child: Padding(
           padding: const EdgeInsets.all(6),

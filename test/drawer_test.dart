@@ -28,7 +28,7 @@ void main() {
   testWidgets('Add Project di drawer membuka form dan Home kembali', (
     tester,
   ) async {
-    await tester.pumpWidget(buatApp());
+    await tester.pumpWidget(buatApp(token: 'tes'));
 
     await bukaDrawer(tester);
     await tester.tap(find.text('Add Project'));

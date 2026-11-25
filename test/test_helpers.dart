@@ -1,7 +1,12 @@
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
+import 'package:provider/provider.dart';
+
+typedef Handler = Future<http.Response> Function(http.Request request);
 
 /// Contoh data proyek dalam bentuk yang sama dengan balasan API Django.
 const proyekContohJson =
@@ -15,15 +20,31 @@ const proyekContohJson =
     '"is_starred":false,"starred_by_names":""}]';
 
 /// ApiClient dengan MockClient supaya tes tidak memanggil jaringan sungguhan.
-ApiClient apiPalsu(
-  Future<http.Response> Function(http.Request request) handler,
-) => ApiClient(client: MockClient(handler), baseUrl: 'http://tes');
+ApiClient apiPalsu(Handler handler) =>
+    ApiClient(client: MockClient(handler), baseUrl: 'http://tes');
 
-/// Aplikasi lengkap dengan klien palsu yang membalas daftar proyek contoh.
-MyApp buatApp({Future<http.Response> Function(http.Request request)? handler}) {
+Future<http.Response> _balasanBawaan(http.Request request) async =>
+    http.Response(proyekContohJson, 200);
+
+/// Aplikasi lengkap dengan klien palsu. Isi [token] untuk memulai dalam
+/// keadaan sudah login.
+MyApp buatApp({Handler? handler, String? token}) {
   return MyApp(
-    apiClient: apiPalsu(
-      handler ?? (request) async => http.Response(proyekContohJson, 200),
-    ),
+    apiClient: apiPalsu(handler ?? _balasanBawaan),
+    initialToken: token,
+  );
+}
+
+/// Satu halaman saja dengan provider yang sama seperti aplikasi aslinya.
+Widget bungkus(Widget halaman, {Handler? handler, String? token}) {
+  final api = apiPalsu(handler ?? _balasanBawaan);
+  return MultiProvider(
+    providers: [
+      Provider.value(value: api),
+      ChangeNotifierProvider(
+        create: (_) => AuthState(api, initialToken: token),
+      ),
+    ],
+    child: MaterialApp(home: halaman),
   );
 }

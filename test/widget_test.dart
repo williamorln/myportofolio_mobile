@@ -67,10 +67,13 @@ void main() {
     );
 
     // menekan kartu lain mengganti pesan, bukan menumpuk
-    await tester.tap(find.text('Logout'));
+    await tester.tap(find.text('Lihat Pengalaman'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Kamu telah menekan tombol Logout!'), findsOneWidget);
+    expect(
+      find.text('Kamu telah menekan tombol Lihat Pengalaman!'),
+      findsOneWidget,
+    );
     expect(find.text('Kamu telah menekan tombol Lihat Skills!'), findsNothing);
   });
 

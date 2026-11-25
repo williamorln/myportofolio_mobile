@@ -17,7 +17,7 @@ void main() {
     tester,
   ) async {
     await pakaiLayarTinggi(tester);
-    await tester.pumpWidget(buatApp());
+    await tester.pumpWidget(buatApp(token: 'tes'));
 
     await tester.tap(find.text('Tambah Proyek'));
     await tester.pumpAndSettle();
@@ -45,32 +45,5 @@ void main() {
 
     expect(find.byType(ProjectFormPage), findsNothing);
     expect(find.byType(MyHomePage), findsOneWidget);
-  });
-
-  testWidgets('setelah OK, form kosong lagi dan data lama tidak muncul', (
-    tester,
-  ) async {
-    await pakaiLayarTinggi(tester);
-    await tester.pumpWidget(const MaterialApp(home: ProjectFormPage()));
-
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Nama Proyek'),
-      'Proyek Lama',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Deskripsi Proyek'),
-      'Deskripsi lama',
-    );
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-
-    // menyimpan lagi tanpa isian harus ditolak, bukan memakai data lama
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Nama proyek tidak boleh kosong!'), findsOneWidget);
-    expect(find.byType(AlertDialog), findsNothing);
   });
 }

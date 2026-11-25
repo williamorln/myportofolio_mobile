@@ -13,7 +13,7 @@ void main() {
     tester.view.physicalSize = const Size(400, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(buatApp());
+    await tester.pumpWidget(buatApp(token: 'tes'));
   }
 
   Future<void> bukaDrawer(WidgetTester tester) async {
