@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
+import 'package:myportofolio_mobile/screens/project_list_screen.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -57,6 +58,12 @@ class LeftDrawer extends StatelessWidget {
             ikon: Icons.home_outlined,
             judul: 'Home',
             halaman: () => MyHomePage(),
+          ),
+          _opsi(
+            context,
+            ikon: Icons.folder_outlined,
+            judul: 'Projects',
+            halaman: () => const ProjectListScreen(),
           ),
           _opsi(
             context,

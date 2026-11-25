@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:myportofolio_mobile/main.dart';
+import 'test_helpers.dart';
+
 import 'package:myportofolio_mobile/widgets/project_card.dart';
 
 const namaTombol = [
@@ -21,7 +22,7 @@ Color? warnaKartu(WidgetTester tester, String nama) {
 
 void main() {
   testWidgets('halaman utama menampilkan identitas pemilik', (tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
     expect(find.text('MyPortfolio'), findsOneWidget);
     expect(find.text('Selamat datang di MyPortfolio Mobile!'), findsOneWidget);
@@ -41,7 +42,7 @@ void main() {
   testWidgets('semua tombol menu tampil dan warna latarnya berbeda', (
     tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
     final warna = <Color?>[];
     for (final nama in namaTombol) {
@@ -53,15 +54,15 @@ void main() {
   });
 
   testWidgets('menekan kartu menu memunculkan SnackBar', (tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
     expect(find.byType(SnackBar), findsNothing);
 
-    await tester.tap(find.text('Lihat Proyek'));
+    await tester.tap(find.text('Lihat Skills'));
     await tester.pump();
 
     expect(
-      find.text('Kamu telah menekan tombol Lihat Proyek!'),
+      find.text('Kamu telah menekan tombol Lihat Skills!'),
       findsOneWidget,
     );
 
@@ -70,7 +71,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Kamu telah menekan tombol Logout!'), findsOneWidget);
-    expect(find.text('Kamu telah menekan tombol Lihat Proyek!'), findsNothing);
+    expect(find.text('Kamu telah menekan tombol Lihat Skills!'), findsNothing);
   });
 
   testWidgets('SnackBar memakai warna kartu yang ditekan', (tester) async {
@@ -79,7 +80,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
     for (final nama in ['Lihat Skills', 'Lihat Pengalaman']) {
       await tester.tap(find.text(nama));
@@ -98,7 +99,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(const MyApp());
+      await tester.pumpWidget(buatApp());
 
       expect(tester.takeException(), isNull);
 

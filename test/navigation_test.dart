@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:myportofolio_mobile/main.dart';
+import 'test_helpers.dart';
+
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 
@@ -16,7 +17,7 @@ void main() {
     tester,
   ) async {
     await pakaiLayarTinggi(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
     await tester.tap(find.text('Tambah Proyek'));
     await tester.pumpAndSettle();
@@ -37,9 +38,9 @@ void main() {
     tester,
   ) async {
     await pakaiLayarTinggi(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
-    await tester.tap(find.text('Lihat Proyek'));
+    await tester.tap(find.text('Lihat Skills'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ProjectFormPage), findsNothing);

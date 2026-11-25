@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:myportofolio_mobile/main.dart';
+import 'test_helpers.dart';
+
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 
@@ -16,7 +17,7 @@ void main() {
   testWidgets('drawer di halaman utama berisi header, Home, dan Add Project', (
     tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
     await bukaDrawer(tester);
 
     expect(find.text('My Portfolio'), findsOneWidget);
@@ -27,7 +28,7 @@ void main() {
   testWidgets('Add Project di drawer membuka form dan Home kembali', (
     tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
 
     await bukaDrawer(tester);
     await tester.tap(find.text('Add Project'));

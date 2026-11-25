@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:myportofolio_mobile/main.dart';
+import 'test_helpers.dart';
+
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
@@ -12,7 +13,7 @@ void main() {
     tester.view.physicalSize = const Size(400, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buatApp());
   }
 
   Future<void> bukaDrawer(WidgetTester tester) async {

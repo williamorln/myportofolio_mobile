@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
+import 'package:myportofolio_mobile/screens/project_list_screen.dart';
 import 'package:myportofolio_mobile/widgets/info_card.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 import 'package:myportofolio_mobile/widgets/project_card.dart';
@@ -15,7 +16,12 @@ class MyHomePage extends StatelessWidget {
   // warna dan halaman tujuan dipasang di model supaya ItemCard tidak perlu
   // if-else per tombol
   final List<ItemHomepage> items = [
-    ItemHomepage("Lihat Proyek", Icons.folder, Colors.blue.shade700),
+    ItemHomepage(
+      "Lihat Proyek",
+      Icons.folder,
+      Colors.blue.shade700,
+      page: (context) => const ProjectListScreen(),
+    ),
     ItemHomepage(
       "Tambah Proyek",
       Icons.add_circle,
