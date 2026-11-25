@@ -12,6 +12,7 @@ Dibuat untuk mata kuliah **Pemrograman Berbasis Platform (PBP)**, Fakultas Ilmu 
 | Tugas 7 | Identitas diganti dengan data sendiri, setiap tombol menu punya warna sendiri lewat model `ItemHomepage`, ditambah tiga tombol baru dan tata letak yang tetap rapi di layar sempit. |
 | Tutorial 09 | Navigasi dengan `Navigator`, drawer (`LeftDrawer`), halaman formulir Tambah Proyek dengan validasi dan dialog ringkasan, serta refactor ke `lib/screens/` dan `lib/widgets/`. |
 | Tugas 8 | Formulir **Tambah Pengalaman** (`ExperienceFormPage`) yang field dan aturannya mengikuti model `Experience` di proyek Django: judul, kategori, deskripsi, URL thumbnail, tanggal mulai dan selesai dengan `showDatePicker()`. Dibuka dari kartu aksi dan dari opsi baru di drawer, dengan validasi dan dialog ringkasan. |
+| Tutorial 10 | Aplikasi terhubung ke backend Django REST Framework: model `Project` dengan `json_serializable`, `ApiClient` (paket `http`), daftar dan detail proyek dengan `FutureBuilder`, login berbasis token dengan `provider`, route guard untuk Tambah Proyek, serta CI/CD GitHub Actions. |
 
 ## Fitur saat ini
 
@@ -19,42 +20,83 @@ Dibuat untuk mata kuliah **Pemrograman Berbasis Platform (PBP)**, Fakultas Ilmu 
 - Enam `ItemCard` berbentuk kisi: Lihat Proyek, Tambah Proyek, Lihat Skills, Lihat Pengalaman, Tambah Pengalaman, dan Logout. Warna latar tiap kartu berbeda dan diambil dari atribut `color` pada `ItemHomepage`, sehingga tidak ada percabangan if-else untuk warna.
 - Menekan kartu menampilkan `SnackBar` bertuliskan "Kamu telah menekan tombol [Nama Tombol]!". SnackBar memakai warna dan ikon kartu yang ditekan, dan pesan lama diganti, bukan menumpuk.
 - Tata letak responsif: kartu identitas memakai `Expanded` sehingga lebarnya mengikuti layar, halaman bisa digulir, dan lebar isi dibatasi 600 px agar tetap enak dilihat di Chrome.
-- Drawer di sisi kiri (header, **Home**, dan **Add Project**). Drawer yang sama dipasang di halaman utama dan halaman formulir. Opsi di drawer memakai `Navigator.pushReplacement()` supaya halaman tidak menumpuk.
+- Drawer di sisi kiri (header, **Home**, **Projects**, **Add Project**, **Add Experience**, dan **Login** atau **Logout** sesuai status login). Drawer yang sama dipasang di halaman utama dan semua halaman formulir. Opsi di drawer memakai `Navigator.pushReplacement()` supaya halaman tidak menumpuk.
 - Kartu **Tambah Proyek** membuka `ProjectFormPage` dengan `Navigator.push()`, jadi tombol Back perangkat atau browser kembali ke menu.
-- `ProjectFormPage` (`StatefulWidget` dengan `Form` dan `GlobalKey<FormState>`) berisi nama proyek dan deskripsi (wajib, isian kosong atau hanya spasi ditolak), kategori (dropdown), teknologi, dan tautan opsional. Tombol Save memanggil `validate()` dan, kalau lolos, menampilkan `AlertDialog` berisi semua isian. Data belum disimpan ke database. Setelah OK, form dan variabelnya dikosongkan.
+- `ProjectFormPage` (`StatefulWidget` dengan `Form` dan `GlobalKey<FormState>`) sejak Tutorial 10 mengikuti `ProjectSerializer` di Django: Title, Problem, Solution, Tech Stack (wajib, isian kosong atau hanya spasi ditolak), dan Project URL (opsional, harus `http` atau `https`). Tombol Save memanggil `validate()`, memastikan pengguna sudah login, lalu mengirim POST ke API. `AlertDialog` hanya muncul setelah server membalas 201.
 - **Tambah Pengalaman** (Tugas 8): halaman `ExperienceFormPage` dibuka dari kartu **Tambah Pengalaman** (`Navigator.push()`) dan dari opsi **Add Experience** di drawer. Drawer lama dipertahankan (Home dan Add Project) dan drawer yang sama dipakai di halaman ini.
   - Enam input sesuai model Django `Experience`: judul (`TextFormField`, wajib, maksimal 255 karakter), kategori (`DropdownButtonFormField`, enam pilihan yang sama dengan `EXPERIENCE_CHOICES`), deskripsi (wajib, maksimal 1000 karakter), URL thumbnail (opsional, harus `http` atau `https`, maksimal 500 karakter), tanggal mulai dan tanggal selesai (`showDatePicker()` lewat `DateFormField`), serta saklar **Masih berjalan** yang mengosongkan tanggal selesai.
   - Validasi: isian wajib yang kosong atau hanya spasi ditolak, batas panjang dicek, format URL dicek, tanggal selesai tidak boleh sebelum tanggal mulai, dan kedua tanggal tidak boleh di masa depan. Semua aturan ada di `lib/utils/validators.dart` sebagai fungsi murni dan dites sendiri.
   - Tombol **Simpan** memanggil `FormState.validate()`. Kalau ada yang tidak valid, pesan error tampil di kolom terkait dan layar menggulir ke kolom pertama yang error. Kalau semua lolos, `showDialog()` menampilkan `AlertDialog` berisi semua isian beserta durasinya, dengan tombol **Tutup** yang juga mengosongkan formulir. Data belum dikirim ke API.
   - Tambahan: penghitung karakter, error yang ikut berubah saat mengetik, tombol Next di papan ketik, dan pengecekan ulang tanggal selesai saat tanggal mulai diganti.
 
+- **Terhubung ke backend** (Tutorial 10): aplikasi membaca dan menulis data proyek lewat API Django REST Framework dari Tutorial 07.
+  - `Project` (`lib/models/project.dart`) memakai `@JsonSerializable(fieldRename: FieldRename.snake)` dan bentuknya mengikuti `ProjectSerializer` milik backend saya: `title`, `problem`, `solution`, `tech_stack`, dan `project_url`. `id` dibuat server sehingga tidak ikut dikirim saat POST, dan `project_url` yang null atau kosong dibaca sebagai string kosong. Berkas `project.g.dart` dihasilkan `build_runner` dan tidak di-commit.
+  - `ApiClient` (`lib/services/api_client.dart`) membungkus `http.Client`: `getProjects()`, `createProject()`, `obtainToken()`, dan `logout()`. Status di luar 2xx dilempar sebagai `ApiException`. Alamat server diambil dari `lib/config.dart` dan bisa diganti dengan `--dart-define=API_BASE_URL=...`.
+  - `ProjectListScreen` mengambil data dengan `FutureBuilder` (Future dibuat di `initState()`) dan `RefreshIndicator`, dengan tampilan memuat, error beserta tombol Retry, dan daftar kosong. Mengetuk proyek membuka `ProjectDetailScreen`. Daftar bisa dibuka tanpa login, dari kartu **Lihat Proyek** maupun opsi **Projects** di drawer.
+  - `AuthState` (`ChangeNotifier`) menyimpan token di memori dan disediakan lewat `MultiProvider` bersama `ApiClient`. `LoginScreen` memvalidasi isian dan menampilkan SnackBar kalau login gagal.
+  - Route guard: `ensureLoggedIn()` membuka `LoginScreen` kalau belum login. Dipakai oleh kartu **Tambah Proyek**, opsi **Add Project** di drawer, dan tombol Save. Kalau server menjawab 401 saat POST, aplikasi logout dan meminta login ulang.
+  - Catatan skema: `Project` di backend saya tidak punya `description` dan `project_image_url` seperti contoh di tutorial, jadi aplikasi mengikuti skema backend (`problem` dan `solution`) dan tidak menampilkan gambar proyek. Halaman Tambah Pengalaman dari Tugas 8 belum dihubungkan ke API.
+
 ## Menjalankan
 
 Versi yang dipakai: Flutter 3.47.9 dan Dart 3.13.7. Mulai Tutorial 09, impor Material memakai paket `material_ui` (`import 'package:material_ui/material_ui.dart';`), sesuai catatan perubahan Flutter 3.50 di tutorial. Paketnya sudah ada di `pubspec.yaml`, jadi `flutter pub get` sudah cukup.
 
+Berkas `*.g.dart` dihasilkan otomatis dan tidak di-commit, jadi jalankan `build_runner` sebelum menjalankan atau menguji aplikasi:
+
 ```sh
 flutter pub get
-flutter run -d chrome
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-Pemeriksaan kode dan tes:
+Jalankan backend Django (`python manage.py runserver`) di terminal lain, lalu jalankan aplikasi sesuai perangkatnya:
 
 ```sh
+# emulator Android (alamat bawaan http://10.0.2.2:8000)
+flutter run
+
+# Chrome
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
+
+# backend yang sudah di-deploy
+flutter run --dart-define=API_BASE_URL=https://william-orlando-myportofolio.pws.cs.ui.ac.id
+```
+
+Daftar proyek bisa dilihat tanpa login. Menambah proyek membutuhkan login dengan akun superuser Django.
+
+Pemeriksaan kode dan tes (tes memakai `MockClient`, jadi backend tidak perlu menyala):
+
+```sh
+dart format --set-exit-if-changed lib test
 flutter analyze
 flutter test
 ```
+
+## CI/CD
+
+Workflow `.github/workflows/main.yaml` berjalan pada push ke `main` dan pull request:
+
+- `build` memakai `VeryGoodOpenSource/very_good_workflows` (`flutter_package.yml@v2`): menjalankan `build_runner`, memeriksa format, `flutter analyze`, dan tes beserta coverage (`min_coverage: 0`).
+- `build_apk` hanya berjalan setelah `build` berhasil (`needs: build`), membuat APK release, dan mengunggahnya sebagai artefak `app-release-apk`. Alamat backend untuk APK diambil dari variabel repositori `API_BASE_URL` (Settings, Secrets and variables, Actions, Variables).
 
 ## Struktur
 
 ```
 lib/
   main.dart                titik masuk aplikasi dan tema
+  config.dart              alamat dasar API (apiBaseUrl)
   models/
     experience.dart        ExperienceEntry dan ExperienceCategory
+    project.dart           Project (json_serializable)
   screens/
     menu.dart              halaman utama (MyHomePage)
-    project_form.dart      formulir Tambah Proyek (ProjectFormPage)
+    project_form.dart      formulir Tambah Proyek, POST ke API (ProjectFormPage)
+    project_list_screen.dart    daftar proyek dari API
+    project_detail_screen.dart  detail proyek
+    login_screen.dart      layar login
     experience_form.dart   formulir Tambah Pengalaman (ExperienceFormPage)
+  services/
+    api_client.dart        ApiClient dan ApiException
+    auth_state.dart        AuthState (token login)
   utils/
     validators.dart        aturan validasi formulir
     formatters.dart        format tanggal dan durasi
@@ -63,11 +105,16 @@ lib/
     info_card.dart         kartu identitas (InfoCard)
     project_card.dart      model ItemHomepage dan kartu menu (ItemCard)
     date_form_field.dart   kolom tanggal dengan date picker (DateFormField)
+    auth_guard.dart        ensureLoggedIn dan logoutWithMessage
 test/
+  test_helpers.dart              MockClient dan pembungkus provider untuk tes
+  api_client_test.dart           model Project dan ApiClient
+  project_list_test.dart         daftar dan detail proyek
+  auth_test.dart                 AuthState, layar login, route guard, drawer
   widget_test.dart               halaman utama dan SnackBar
   drawer_test.dart               drawer dan navigasi Home / Add Project
-  project_form_test.dart         validasi dan dialog formulir proyek
-  navigation_test.dart           navigasi dari kartu dan reset form proyek
+  project_form_test.dart         validasi dan POST formulir proyek
+  navigation_test.dart           navigasi dari kartu ke formulir proyek
   validators_test.dart           aturan validasi, format tanggal, dan model
   experience_form_test.dart      formulir pengalaman, termasuk layar sempit
   experience_navigation_test.dart  akses dari kartu dan drawer, serta Home
@@ -124,3 +171,5 @@ test/
 ## AI Disclosure
 
 Pada Tugas 8 saya membuat halaman formulir **Add Experience** (model, validator, date picker, dialog ringkasan, serta navigasi dari kartu dan drawer) beserta tes untuk semuanya. Untuk pengerjaannya saya menggunakan **Claude Code** (Anthropic), yang hanya membantu untuk debugging, misalnya label tanggal yang bertumpuk dan tes yang gagal, serta sebagai pemandu yang memberi ide dan arahan tentang bagaimana pengerjaannya sebaiknya disusun.
+
+Pada Tutorial 10 saya menghubungkan aplikasi ke backend Django (model, `ApiClient`, daftar proyek, login token, route guard, dan workflow CI/CD) beserta tesnya. Claude Code kembali saya pakai hanya untuk debugging dan sebagai pemandu yang memberi ide tentang cara menyusun pengerjaannya.

@@ -109,6 +109,20 @@ void main() {
       expect(dipanggil, 1);
     });
 
+    test(
+      'logout saat offline tetap menghapus token tanpa melempar error',
+      () async {
+        final auth = AuthState(
+          apiPalsu((request) async => throw http.ClientException('putus')),
+          initialToken: 'abc123',
+        );
+
+        await auth.logout();
+
+        expect(auth.isLoggedIn, isFalse);
+      },
+    );
+
     test('logout saat belum login tidak mengirim request', () async {
       var jumlah = 0;
       final auth = AuthState(

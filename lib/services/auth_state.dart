@@ -23,8 +23,9 @@ class AuthState extends ChangeNotifier {
 
     try {
       await _apiClient.logout(token: current);
-    } on ApiException {
-      // token mungkin sudah tidak berlaku di server, tetap keluar di sisi ini
+    } on Exception {
+      // token mungkin sudah tidak berlaku, atau server tidak terjangkau (offline).
+      // Apa pun yang terjadi, tetap keluar di sisi aplikasi.
     } finally {
       _token = null;
       notifyListeners();
